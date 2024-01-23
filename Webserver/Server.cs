@@ -18,7 +18,10 @@ namespace Webserver
                 return;
             }
 
+            
             HttpListener listener = new HttpListener();
+
+            // Set Uniform Ressource Identifier for listener
             listener.Prefixes.Add("http://localhost:8080/");
             listener.Start();
 
@@ -29,19 +32,30 @@ namespace Webserver
                 // GetContext method blocks while waiting for a request
                 HttpListenerContext context = listener.GetContext();
                 Console.WriteLine("Client has connected");
-                HandleClient(context);
+
+                // thread to handle client
+                Thread worker = new Thread(HandleClient);
+                worker.Start(context);
+
+
+                //HandleClient(context);
             }
 
         }
 
-        private void HandleClient(HttpListenerContext context)
+        private void HandleClient(object data)
         {
+            var context = (HttpListenerContext)data;
+
+            if (context == null)
+                return;
+
             // Request
             HttpListenerRequest request = context.Request;
 
 
             string requestedUrl = request.Url.LocalPath;
-            string filePath = "{path}" + requestedUrl;
+            string filePath = "D:\\git\\Webserver\\" + requestedUrl;
 
 
             // Response
@@ -76,7 +90,6 @@ namespace Webserver
                 string htmlContent = $@"
             <html>
                 <body>
-                    <h1>Hello, World!</h1>
                     <p>Client IP: {request.RemoteEndPoint.Address}</p>
                     <p>User-Agent (Browser): {request.UserAgent}</p>
                     <p>Protocol Version: {request.ProtocolVersion}</p>
